@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sayı Tahmin Oyunu</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to right, #f7b733, #fc4a1a);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+
+    .container, .game-container {
+      text-align: center;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      width: 350px;
+    }
+
+    h1 {
+      color: #fc4a1a;
+    }
+
+    input {
+      padding: 12px;
+      width: 80%;
+      margin: 10px 0;
+      font-size: 18px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #fc4a1a;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #e6451a;
+    }
+
+    #result {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    table {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #fc4a1a;
+      color: white;
+    }
+
+    #restartBtn {
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="startScreen">
+    <h1>Hoş Geldiniz!</h1>
+    <p>Lütfen isminizi girin:</p>
+    <input type="text" id="username" placeholder="Adınız" />
+    <button onclick="startGame()">Oyuna Başla</button>
+  </div>
+
+  <div class="game-container" id="gameScreen" style="display: none;">
+    <h1>Sayı Tahmin Oyunu</h1>
+    <p id="greeting"></p>
+    <input type="number" id="userGuess" placeholder="Tahmininizi girin" />
+    <button onclick="checkGuess()">Tahmin Et</button>
+    <p id="result"></p>
+    <p>Deneme Sayısı: <span id="attempts">0</span></p>
+
+    <div id="guessTableContainer" style="display: none;">
+      <h3>Tahmin Geçmişi</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Tahmin</th>
+          </tr>
+        </thead>
+        <tbody id="guessTableBody"></tbody>
+      </table>
+    </div>
+
+    <button id="restartBtn" onclick="restartGame()">Yeniden Oyna</button>
+  </div>
+
+  <script>
+    let randomNumber;
+    let attempts = 0;
+    let username = "";
+    let guessList = [];
+
+    function startGame() {
+      const nameInput = document.getElementById("username").value.trim();
+      if (nameInput === "") {
+        alert("Lütfen isminizi girin.");
+        return;
+      }
+
+      username = nameInput;
+      document.getElementById("greeting").textContent = `${username}, 1 ile 100 arasında bir sayı tahmin et.`;
+      document.getElementById("startScreen").style.display = "none";
+      document.getElementById("gameScreen").style.display = "block";
+
+      randomNumber = Math.floor(Math.random() * 100) + 1;
+      attempts = 0;
+      guessList = [];
+      document.getElementById("attempts").textContent = attempts;
+      document.getElementById("result").textContent = "";
+      document.getElementById("userGuess").disabled = false;
+      document.getElementById("restartBtn").style.display = "none";
+      document.getElementById("guessTableContainer").style.display = "none";
+      updateGuessTable();
+    }
+
+    function checkGuess() {
+      const guessInput = document.getElementById("userGuess");
+      const guess = Number(guessInput.value);
+      const resultMessage = document.getElementById("result");
+
+      // Geçersiz sayı kontrolü
+      if (isNaN(guess) || guess < 1 || guess > 100) {
+        resultMessage.textContent = "Sayı geçersiz! Lütfen 1 ile 100 arasında bir sayı girin.";
+        resultMessage.style.color = "red";
+        return;
+      }
+
+      attempts++;
+      document.getElementById("attempts").textContent = attempts;
+      guessList.push(guess);
+      updateGuessTable();
+
+      if (guess < randomNumber) {
+        resultMessage.textContent = "Sayını arttır(Daha büyük bir sayı söyle)!";
+        resultMessage.style.color = "blue";
+      } else if (guess > randomNumber) {
+        resultMessage.textContent = "Sayını azalt(Daha küçük bir sayı söyle)!";
+        resultMessage.style.color = "blue";
+      } else {
+        resultMessage.textContent = `🎉 Tebrikler ${username}! Sayıyı ${attempts} denemede buldun.`;
+        resultMessage.style.color = "green";
+        document.getElementById("guessTableContainer").style.display = "block";
+        guessInput.disabled = true;
+        document.getElementById("restartBtn").style.display = "inline-block";
+      }
+
+      guessInput.value = "";
+    }
+
+    function updateGuessTable() {
+      const tableBody = document.getElementById("guessTableBody");
+      tableBody.innerHTML = "";
+
+      guessList.forEach((guess, index) => {
+        const row = document.createElement("tr");
+        const indexCell = document.createElement("td");
+        const guessCell = document.createElement("td");
+
+        indexCell.textContent = index + 1;
+        guessCell.textContent = guess;
+
+        row.appendChild(indexCell);
+        row.appendChild(guessCell);
+        tableBody.appendChild(row);
+      });
+    }
+
+    function restartGame() {
+      startGame(); // Yeniden başlat
+    }
+  </script>
+</body>
+</html>
+
