@@ -116,6 +116,7 @@
     let attempts = 0;
     let username = "";
     let guessList = [];
+    let lastHint = null; // Son ipucu: "up" veya "down"
 
     function startGame() {
       const nameInput = document.getElementById("username").value.trim();
@@ -132,6 +133,7 @@
       randomNumber = Math.floor(Math.random() * 100) + 1;
       attempts = 0;
       guessList = [];
+      lastHint = null;
       document.getElementById("attempts").textContent = attempts;
       document.getElementById("result").textContent = "";
       document.getElementById("userGuess").disabled = false;
@@ -145,11 +147,25 @@
       const guess = Number(guessInput.value);
       const resultMessage = document.getElementById("result");
 
-      // Geçersiz sayı kontrolü
       if (isNaN(guess) || guess < 1 || guess > 100) {
         resultMessage.textContent = "Sayı geçersiz! Lütfen 1 ile 100 arasında bir sayı girin.";
         resultMessage.style.color = "red";
         return;
+      }
+
+      // Önceki yönlendirmeye göre kısıtlama:
+      if (lastHint && guessList.length > 0) {
+        const prevGuess = guessList[guessList.length - 1];
+        if (lastHint === "up" && guess <= prevGuess) {
+          resultMessage.textContent = "Daha büyük bir sayı girmen gerekiyordu!";
+          resultMessage.style.color = "red";
+          return;
+        }
+        if (lastHint === "down" && guess >= prevGuess) {
+          resultMessage.textContent = "Daha küçük bir sayı girmen gerekiyordu!";
+          resultMessage.style.color = "red";
+          return;
+        }
       }
 
       attempts++;
@@ -158,17 +174,20 @@
       updateGuessTable();
 
       if (guess < randomNumber) {
-        resultMessage.textContent = "Sayını arttır(Daha büyük bir sayı söyle)!";
+        resultMessage.textContent = "Sayını arttır (Daha büyük bir sayı söyle)!";
         resultMessage.style.color = "blue";
+        lastHint = "up";
       } else if (guess > randomNumber) {
-        resultMessage.textContent = "Sayını azalt(Daha küçük bir sayı söyle)!";
+        resultMessage.textContent = "Sayını azalt (Daha küçük bir sayı söyle)!";
         resultMessage.style.color = "blue";
+        lastHint = "down";
       } else {
         resultMessage.textContent = `🎉 Tebrikler ${username}! Sayıyı ${attempts} denemede buldun.`;
         resultMessage.style.color = "green";
         document.getElementById("guessTableContainer").style.display = "block";
         guessInput.disabled = true;
         document.getElementById("restartBtn").style.display = "inline-block";
+        lastHint = null;
       }
 
       guessInput.value = "";
@@ -193,9 +212,8 @@
     }
 
     function restartGame() {
-      startGame(); // Yeniden başlat
+      startGame();
     }
   </script>
 </body>
 </html>
-
