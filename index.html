@@ -7,103 +7,106 @@
   <style>
     body {
       font-family: 'Arial', sans-serif;
-      background: linear-gradient(to right, #f7b733, #fc4a1a);
+      background: linear-gradient(to right, #00c6ff, #0072ff);
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
-      color: #333;
+      padding: 10px;
     }
 
     .container, .game-container {
-      text-align: center;
-      background-color: #fff;
-      padding: 30px;
+      background: white;
+      padding: 25px;
       border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      width: 350px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+      box-sizing: border-box;
+      text-align: center;
     }
 
     h1 {
-      color: #fc4a1a;
+      color: #0072ff;
     }
 
-    input {
+    input, button {
       padding: 12px;
-      width: 80%;
       margin: 10px 0;
-      font-size: 18px;
+      width: 100%;
+      font-size: 1rem;
       border-radius: 10px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
     }
 
     button {
-      padding: 10px 15px;
-      font-size: 16px;
-      background-color: #fc4a1a;
+      background-color: #0072ff;
       color: white;
       border: none;
-      border-radius: 10px;
-      cursor: pointer;
     }
 
     button:hover {
-      background-color: #e6451a;
+      background-color: #005fd1;
     }
 
     #result {
-      font-weight: bold;
       margin-top: 10px;
+      font-weight: bold;
     }
 
     table {
-      margin-top: 20px;
       width: 100%;
+      margin-top: 20px;
       border-collapse: collapse;
+      font-size: 0.9rem;
     }
 
     th, td {
-      padding: 8px;
       border: 1px solid #ddd;
+      padding: 8px;
     }
 
     th {
-      background-color: #fc4a1a;
+      background: #0072ff;
       color: white;
     }
 
     #restartBtn {
-      margin-top: 20px;
       display: none;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.5rem; }
+      input, button { font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
+
   <div class="container" id="startScreen">
-    <h1>Hoş Geldiniz!</h1>
-    <p>Lütfen isminizi girin:</p>
+    <h1>Sayı Tahmin Oyunu</h1>
+    <p>İsminizi girin:</p>
     <input type="text" id="username" placeholder="Adınız" />
-    <button onclick="startGame()">Oyuna Başla</button>
+    <p>Oyun Modunu Seçin:</p>
+    <button onclick="selectMode('unlimited')">Sınırsız Deneme</button>
+    <button onclick="selectMode('limited')">10 Hakkım Olsun</button>
   </div>
 
   <div class="game-container" id="gameScreen" style="display: none;">
-    <h1>Sayı Tahmin Oyunu</h1>
+    <h1>Tahmin Et</h1>
     <p id="greeting"></p>
     <input type="number" id="userGuess" placeholder="Tahmininizi girin" />
     <button onclick="checkGuess()">Tahmin Et</button>
     <p id="result"></p>
-    <p>Deneme Sayısı: <span id="attempts">0</span></p>
+    <p id="attemptInfo"></p>
 
     <div id="guessTableContainer" style="display: none;">
       <h3>Tahmin Geçmişi</h3>
       <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Tahmin</th>
-          </tr>
-        </thead>
+        <thead><tr><th>#</th><th>Tahmin</th></tr></thead>
         <tbody id="guessTableBody"></tbody>
       </table>
     </div>
@@ -112,21 +115,17 @@
   </div>
 
   <script>
-    let randomNumber;
-    let attempts = 0;
-    let username = "";
-    let guessList = [];
-    let lastHint = null; // Son ipucu: "up" veya "down"
+    let randomNumber, attempts, username, mode, guessList, lastHint;
+    const maxAttempts = 10;
 
-    function startGame() {
-      const nameInput = document.getElementById("username").value.trim();
-      if (nameInput === "") {
+    function selectMode(selectedMode) {
+      username = document.getElementById("username").value.trim();
+      if (username === "") {
         alert("Lütfen isminizi girin.");
         return;
       }
 
-      username = nameInput;
-      document.getElementById("greeting").textContent = `${username}, 1 ile 100 arasında bir sayı tahmin et.`;
+      mode = selectedMode;
       document.getElementById("startScreen").style.display = "none";
       document.getElementById("gameScreen").style.display = "block";
 
@@ -134,85 +133,97 @@
       attempts = 0;
       guessList = [];
       lastHint = null;
-      document.getElementById("attempts").textContent = attempts;
-      document.getElementById("result").textContent = "";
+
       document.getElementById("userGuess").disabled = false;
       document.getElementById("restartBtn").style.display = "none";
+      document.getElementById("result").textContent = "";
       document.getElementById("guessTableContainer").style.display = "none";
       updateGuessTable();
+
+      document.getElementById("greeting").textContent =
+        `${username}, 1-100 arasında sayı tahmin et!` +
+        (mode === "limited" ? ` Hakkın: ${maxAttempts}` : " Sınırsız hakkın var.");
+      updateAttemptInfo();
+    }
+
+    function updateAttemptInfo() {
+      document.getElementById("attemptInfo").textContent =
+        mode === "limited" ? `Deneme: ${attempts} / ${maxAttempts}` : `Deneme: ${attempts}`;
     }
 
     function checkGuess() {
-      const guessInput = document.getElementById("userGuess");
-      const guess = Number(guessInput.value);
-      const resultMessage = document.getElementById("result");
+      const input = document.getElementById("userGuess");
+      const guess = Number(input.value);
+      const result = document.getElementById("result");
 
       if (isNaN(guess) || guess < 1 || guess > 100) {
-        resultMessage.textContent = "Sayı geçersiz! Lütfen 1 ile 100 arasında bir sayı girin.";
-        resultMessage.style.color = "red";
+        result.textContent = "1 ile 100 arasında bir sayı gir!";
+        result.style.color = "red";
         return;
       }
 
-      // Önceki yönlendirmeye göre kısıtlama:
       if (lastHint && guessList.length > 0) {
-        const prevGuess = guessList[guessList.length - 1];
-        if (lastHint === "up" && guess <= prevGuess) {
-          resultMessage.textContent = "Daha büyük bir sayı girmen gerekiyordu!";
-          resultMessage.style.color = "red";
+        const prev = guessList[guessList.length - 1];
+        if (lastHint === "up" && guess <= prev) {
+          result.textContent = "Daha büyük bir sayı denemelisin!";
+          result.style.color = "red";
           return;
         }
-        if (lastHint === "down" && guess >= prevGuess) {
-          resultMessage.textContent = "Daha küçük bir sayı girmen gerekiyordu!";
-          resultMessage.style.color = "red";
+        if (lastHint === "down" && guess >= prev) {
+          result.textContent = "Daha küçük bir sayı denemelisin!";
+          result.style.color = "red";
           return;
         }
       }
 
       attempts++;
-      document.getElementById("attempts").textContent = attempts;
       guessList.push(guess);
       updateGuessTable();
+      updateAttemptInfo();
 
-      if (guess < randomNumber) {
-        resultMessage.textContent = "Sayını arttır (Daha büyük bir sayı söyle)!";
-        resultMessage.style.color = "blue";
+      if (guess === randomNumber) {
+        result.textContent = `🎉 Tebrikler ${username}, ${attempts} denemede buldun!`;
+        result.style.color = "green";
+        endGame();
+      } else if (guess < randomNumber) {
+        result.textContent = "Daha büyük bir sayı dene!";
+        result.style.color = "blue";
         lastHint = "up";
-      } else if (guess > randomNumber) {
-        resultMessage.textContent = "Sayını azalt (Daha küçük bir sayı söyle)!";
-        resultMessage.style.color = "blue";
-        lastHint = "down";
       } else {
-        resultMessage.textContent = `🎉 Tebrikler ${username}! Sayıyı ${attempts} denemede buldun.`;
-        resultMessage.style.color = "green";
-        document.getElementById("guessTableContainer").style.display = "block";
-        guessInput.disabled = true;
-        document.getElementById("restartBtn").style.display = "inline-block";
-        lastHint = null;
+        result.textContent = "Daha küçük bir sayı dene!";
+        result.style.color = "blue";
+        lastHint = "down";
       }
 
-      guessInput.value = "";
+      if (mode === "limited" && attempts >= maxAttempts) {
+        result.textContent = `😢 Hakkın bitti! Doğru sayı: ${randomNumber}`;
+        result.style.color = "darkred";
+        endGame();
+      }
+
+      input.value = "";
+    }
+
+    function endGame() {
+      document.getElementById("userGuess").disabled = true;
+      document.getElementById("restartBtn").style.display = "inline-block";
+      document.getElementById("guessTableContainer").style.display = "block";
     }
 
     function updateGuessTable() {
-      const tableBody = document.getElementById("guessTableBody");
-      tableBody.innerHTML = "";
-
-      guessList.forEach((guess, index) => {
+      const table = document.getElementById("guessTableBody");
+      table.innerHTML = "";
+      guessList.forEach((val, idx) => {
         const row = document.createElement("tr");
-        const indexCell = document.createElement("td");
-        const guessCell = document.createElement("td");
-
-        indexCell.textContent = index + 1;
-        guessCell.textContent = guess;
-
-        row.appendChild(indexCell);
-        row.appendChild(guessCell);
-        tableBody.appendChild(row);
+        row.innerHTML = `<td>${idx + 1}</td><td>${val}</td>`;
+        table.appendChild(row);
       });
     }
 
     function restartGame() {
-      startGame();
+      document.getElementById("startScreen").style.display = "block";
+      document.getElementById("gameScreen").style.display = "none";
+      document.getElementById("username").value = "";
     }
   </script>
 </body>
