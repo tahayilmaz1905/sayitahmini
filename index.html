@@ -163,8 +163,9 @@
 
     function selectMode(selectedMode) {
       username = document.getElementById("username").value.trim();
-      if (username === "") {
-        alert("Lütfen isminizi girin.");
+      const nameRegex = /^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]+$/;
+      if (!nameRegex.test(username)) {
+        alert("Lütfen sadece harflerden oluşan bir isim girin.");
         return;
       }
 
@@ -183,6 +184,14 @@
       document.getElementById("restartBtn").style.display = "none";
       document.getElementById("result").textContent = "";
       document.getElementById("guessTableContainer").style.display = "none";
+
+      // Tahmin bölümlerini göster (restart sonrası görünür yapmak için)
+      document.getElementById("userGuess").style.display = "inline-block";
+      document.querySelector("button[onclick='checkGuess()']").style.display = "inline-block";
+      document.getElementById("greeting").style.display = "block";
+      document.getElementById("attemptInfo").style.display = "block";
+      document.getElementById("rangeContainer").style.display = "block";
+
       updateGuessTable();
 
       document.getElementById("greeting").textContent =
@@ -265,6 +274,13 @@
       document.getElementById("userGuess").disabled = true;
       document.getElementById("restartBtn").style.display = "inline-block";
       document.getElementById("guessTableContainer").style.display = "block";
+
+      // Tahmin bölümlerini gizle
+      document.getElementById("userGuess").style.display = "none";
+      document.querySelector("button[onclick='checkGuess()']").style.display = "none";
+      document.getElementById("greeting").style.display = "none";
+      document.getElementById("attemptInfo").style.display = "none";
+      document.getElementById("rangeContainer").style.display = "none";
     }
 
     function updateGuessTable() {
@@ -300,10 +316,27 @@
     function restartGame() {
       document.getElementById("startScreen").style.display = "block";
       document.getElementById("gameScreen").style.display = "none";
+
+      // Inputları sıfırla
       document.getElementById("username").value = "";
+      document.getElementById("userGuess").value = "";
+      document.getElementById("result").textContent = "";
+      document.getElementById("guessTableBody").innerHTML = "";
+
+      // Tahmin bölümlerini göster
+      document.getElementById("userGuess").style.display = "inline-block";
+      document.querySelector("button[onclick='checkGuess()']").style.display = "inline-block";
+      document.getElementById("greeting").style.display = "block";
+      document.getElementById("attemptInfo").style.display = "block";
+      document.getElementById("rangeContainer").style.display = "block";
+
+      document.getElementById("userGuess").disabled = false;
+      document.getElementById("restartBtn").style.display = "none";
     }
   </script>
 
-  <footer>Bu oyun <strong>Taha Özdemir</strong> tarafından geliştirilmiştir.</footer>
+  <footer>
+    &copy; Bu oyun 𝗧𝗮𝗵𝗮 Ö𝘇𝗱𝗲𝗺𝗶𝗿 tarafından geliştirilmiştir
+  </footer>
 </body>
 </html>
