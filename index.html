@@ -75,9 +75,9 @@
       color: white;
     }
 
-    #restartBtn {
+    #restartBtn, #shareBtn {
       display: none;
-      margin-top: 20px;
+      margin-top: 10px;
     }
 
     footer {
@@ -87,6 +87,10 @@
       color: white;
       font-style: italic;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+    }
+
+    #guessInputArea {
+      display: block;
     }
 
     @media (max-width: 480px) {
@@ -109,8 +113,12 @@
   <div class="game-container" id="gameScreen" style="display: none;">
     <h1>Tahmin Et</h1>
     <p id="greeting"></p>
-    <input type="number" id="userGuess" placeholder="Tahmininizi girin" />
-    <button onclick="checkGuess()">Tahmin Et</button>
+
+    <div id="guessInputArea">
+      <input type="number" id="userGuess" placeholder="Tahmininizi girin" />
+      <button onclick="checkGuess()">Tahmin Et</button>
+    </div>
+
     <p id="result"></p>
     <p id="attemptInfo"></p>
 
@@ -123,6 +131,7 @@
     </div>
 
     <button id="restartBtn" onclick="restartGame()">Yeniden Oyna</button>
+    <button id="shareBtn" onclick="shareScore()">Skor Tablosunu Paylaş</button>
   </div>
 
   <script>
@@ -147,8 +156,10 @@
 
       document.getElementById("userGuess").disabled = false;
       document.getElementById("restartBtn").style.display = "none";
+      document.getElementById("shareBtn").style.display = "none";
       document.getElementById("result").textContent = "";
       document.getElementById("guessTableContainer").style.display = "none";
+      document.getElementById("guessInputArea").style.display = "block";
       updateGuessTable();
 
       document.getElementById("greeting").textContent =
@@ -170,6 +181,12 @@
       if (isNaN(guess) || guess < 1 || guess > 100) {
         result.textContent = "1 ile 100 arasında bir sayı gir!";
         result.style.color = "red";
+        return;
+      }
+
+      if (guessList.includes(guess)) {
+        result.textContent = "Bu sayıyı zaten denedin!";
+        result.style.color = "orange";
         return;
       }
 
@@ -217,7 +234,9 @@
 
     function endGame() {
       document.getElementById("userGuess").disabled = true;
+      document.getElementById("guessInputArea").style.display = "none";
       document.getElementById("restartBtn").style.display = "inline-block";
+      document.getElementById("shareBtn").style.display = "inline-block";
       document.getElementById("guessTableContainer").style.display = "block";
     }
 
@@ -228,6 +247,17 @@
         const row = document.createElement("tr");
         row.innerHTML = `<td>${idx + 1}</td><td>${val}</td>`;
         table.appendChild(row);
+      });
+    }
+
+    function shareScore() {
+      const guesses = guessList.map((val, idx) => `${idx + 1}. tahmin: ${val}`).join('\n');
+      const summary = `🎯 ${username}'nin Sayı Tahmin Oyunu Skoru:\n` +
+                      `Deneme Sayısı: ${attempts}\n` +
+                      `Tahminler:\n${guesses}`;
+
+      navigator.clipboard.writeText(summary).then(() => {
+        alert("Skor panosu panoya kopyalandı! Paylaşabilirsin.");
       });
     }
 
